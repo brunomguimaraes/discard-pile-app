@@ -46,50 +46,10 @@ const Points = () => {
 		initialPosition: [0, 0],
 		});
 
-	const [initialPosition, setInitialPosition] = useState<[number, number]>([0, 0]);
-
-
 	const navigation = useNavigation();
 	const route = useRoute();
 
 	const routeParams = route.params as Params;
-
-	useEffect(() => {
-		async function loadPoints() {
-			const response = await api.get("/items");
-
-			setState({
-				...state,
-			items: response.data
-			});
-		};
-
-		loadPoints();
-	}, []);
-
-	useEffect(() => {
-		async function loadPosition() {
-			const { status } = await Location.requestPermissionsAsync();
-
-			if (status !== "granted") {
-				Alert.alert(
-					"Oops...",
-					"We need your permission to show your location"
-				);
-				return;
-			}
-
-			const location = await Location.getCurrentPositionAsync({
-				enableHighAccuracy: true,
-			});
-
-			const { latitude, longitude } = location.coords;
-
-			setInitialPosition([latitude, longitude]);
-		}
-
-		loadPosition();
-	});
 
 	useEffect(() => {
 		async function loadPoints() {
@@ -109,6 +69,46 @@ const Points = () => {
 
 		loadPoints();
 	}, [state.selectedItems]);
+
+	useEffect(() => {
+		async function loadPosition() {
+			const { status } = await Location.requestPermissionsAsync();
+
+			if (status !== "granted") {
+				Alert.alert(
+					"Oops...",
+					"We need your permission to show your location"
+				);
+				return;
+			}
+
+			const location = await Location.getCurrentPositionAsync({
+				enableHighAccuracy: true,
+			});
+
+			const { latitude, longitude } = location.coords;
+			
+			setState({
+				...state,
+				initialPosition: [latitude, longitude]
+			});
+		}
+
+		loadPosition();
+	},[]);
+
+	useEffect(() => {
+		async function loadItems() {
+			const response = await api.get("/items");
+
+			setState({
+				...state,
+			items: response.data
+			});
+		};
+
+		loadItems();
+	}, []);
 
 	const handleNavigateBack = () => {
 		navigation.goBack();
@@ -151,12 +151,12 @@ const Points = () => {
                 </Text>
 
 				<View style={styles.mapContainer}>
-					{initialPosition[0] !== 0 && (
+					{state.initialPosition[0] !== 0 && (
 						<MapView
 							style={styles.map}
 							initialRegion={{
-								latitude: initialPosition[0],
-								longitude: initialPosition[1],
+								latitude: state.initialPosition[0],
+								longitude: state.initialPosition[1],
 								latitudeDelta: 0.014,
 								longitudeDelta: 0.014,
 							}}
