@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { View, StyleSheet, Image, TouchableOpacity, Text, ScrollView, SafeAreaView, Alert } from 'react-native';
 import { SvgUri } from 'react-native-svg';
@@ -39,12 +39,13 @@ interface PointsState {
 };
 
 const Points = () => {
+	const _isMounted = useRef(true); 
 	const [state, setState] = useState<PointsState>({
 		items: [],
 		points: [],
 		selectedItems: [],
 		initialPosition: [0, 0],
-		});
+	});
 
 	const navigation = useNavigation();
 	const route = useRoute();
@@ -63,7 +64,7 @@ const Points = () => {
 
 			setState({
 				...state,
-			points: response.data
+				points: response.data
 			});
 		}
 
@@ -87,7 +88,7 @@ const Points = () => {
 			});
 
 			const { latitude, longitude } = location.coords;
-			
+
 			setState({
 				...state,
 				initialPosition: [latitude, longitude]
@@ -95,20 +96,26 @@ const Points = () => {
 		}
 
 		loadPosition();
-	},[]);
+	}, []);
 
 	useEffect(() => {
 		async function loadItems() {
 			const response = await api.get("/items");
-
+			console.log('CHAMEI ITENS', response.data)
 			setState({
 				...state,
-			items: response.data
+				items: response.data
 			});
 		};
 
 		loadItems();
 	}, []);
+
+	useEffect(() => {
+    return () => {
+        _isMounted.current = false;
+    }
+  }, []);
 
 	const handleNavigateBack = () => {
 		navigation.goBack();
@@ -126,12 +133,12 @@ const Points = () => {
 
 			setState({
 				...state,
-			selectedItems: filteredItems
+				selectedItems: filteredItems
 			});
 		} else {
 			setState({
 				...state,
-			selectedItems: [...state.selectedItems, id]
+				selectedItems: [...state.selectedItems, id]
 			});
 		}
 	}
@@ -145,10 +152,10 @@ const Points = () => {
 
 				<Text style={styles.title}>
 					Welcome!
-                </Text>
+        </Text>
 				<Text style={styles.description}>
 					Find collection points near you.
-                </Text>
+        </Text>
 
 				<View style={styles.mapContainer}>
 					{state.initialPosition[0] !== 0 && (
@@ -237,6 +244,7 @@ const styles = StyleSheet.create({
 	mapContainer: {
 		flex: 1,
 		width: '100%',
+		maxHeight: '60%',
 		borderRadius: 10,
 		overflow: 'hidden',
 		marginTop: 16,
