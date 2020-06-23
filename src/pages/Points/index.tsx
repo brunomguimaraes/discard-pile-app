@@ -101,7 +101,6 @@ const Points = () => {
 	useEffect(() => {
 		async function loadItems() {
 			const response = await api.get("/items");
-			console.log('CHAMEI ITENS', response.data)
 			setState({
 				...state,
 				items: response.data
